@@ -7,7 +7,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-LABEL="com.mobb.usage-check"
+LABEL="${USAGE_CHECK_LABEL:-com.usage-check.dashboard}"
 DEST="$HOME/Library/LaunchAgents/$LABEL.plist"
 DOMAIN="gui/$(id -u)"
 PORT="${USAGE_CHECK_PORT:-4317}"
