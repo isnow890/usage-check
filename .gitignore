@@ -20,6 +20,7 @@ data/
 # verification artifacts
 .playwright-mcp/
 *.png
+!docs/assets/*.png
 
 # logs
 npm-debug.log*
@@ -30,6 +31,13 @@ yarn-error.log*
 .env
 .env.*
 !.env.example
+
+# agent instructions, decisions, and work notes stay on this machine
+/AGENTS.md
+/CLAUDE.md
+/.claude/
+/docs/*
+!/docs/assets/
 
 # macOS
 .DS_Store
