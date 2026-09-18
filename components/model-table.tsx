@@ -26,9 +26,14 @@ export function ModelTable({ rows }: { rows: Row[] }) {
           <tr className="text-[10.5px] text-ink-faint">
             <th className="border-b border-line px-3 py-2 text-left font-normal">Provider</th>
             <th className="border-b border-line px-3 py-2 text-left font-normal">Model</th>
-            <th className="border-b border-line px-3 py-2 text-right font-normal">Requests</th>
+            {/* Requests and Share drop out on narrow screens so Tokens never clips. */}
+            <th className="hidden border-b border-line px-3 py-2 text-right font-normal sm:table-cell">
+              Requests
+            </th>
             <th className="border-b border-line px-3 py-2 text-right font-normal">Tokens</th>
-            <th className="border-b border-line px-3 py-2 text-right font-normal">Share</th>
+            <th className="hidden border-b border-line px-3 py-2 text-right font-normal md:table-cell">
+              Share
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -42,9 +47,11 @@ export function ModelTable({ rows }: { rows: Row[] }) {
                 />
                 {r.name}
               </td>
-              <td className="tnum px-3 py-1.5 text-right">{fmtInt(r.requests)}</td>
+              <td className="tnum hidden px-3 py-1.5 text-right sm:table-cell">
+                {fmtInt(r.requests)}
+              </td>
               <td className="tnum px-3 py-1.5 text-right">{fmtTokens(r.tokens)}</td>
-              <td className="tnum px-3 py-1.5 text-right text-ink-dim">
+              <td className="tnum hidden px-3 py-1.5 text-right text-ink-dim md:table-cell">
                 {((r.tokens / total) * 100).toFixed(1)}%
               </td>
             </tr>
