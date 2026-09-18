@@ -38,6 +38,7 @@ yarn-error.log*
 /.claude/
 /docs/*
 !/docs/assets/
+/work/
 
 # macOS
 .DS_Store
