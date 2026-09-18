@@ -1,0 +1,35 @@
+# dependencies
+node_modules/
+
+# next.js build output
+.next/
+out/
+build/
+next-env.d.ts
+
+# typescript
+*.tsbuildinfo
+
+# local runtime state (snapshot caches, refreshed tokens)
+data/
+.usage-check/
+
+# deployment
+.vercel
+
+# verification artifacts
+.playwright-mcp/
+*.png
+
+# logs
+npm-debug.log*
+yarn-error.log*
+*.log
+
+# environment
+.env
+.env.*
+!.env.example
+
+# macOS
+.DS_Store
