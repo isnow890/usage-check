@@ -11,6 +11,10 @@ LABEL="${USAGE_CHECK_LABEL:-com.usage-check.dashboard}"
 DEST="$HOME/Library/LaunchAgents/$LABEL.plist"
 DOMAIN="gui/$(id -u)"
 PORT="${USAGE_CHECK_PORT:-4317}"
+# Loopback by default, so the dashboard is not reachable from other devices on
+# whatever network this machine happens to join. Remote access is Tailscale
+# Serve's job: it proxies the tailnet to this loopback port.
+BIND_HOST="${USAGE_CHECK_BIND:-127.0.0.1}"
 
 NODE_BIN="$(command -v node || true)"
 if [ -z "$NODE_BIN" ]; then
@@ -38,6 +42,8 @@ cat > "$DEST" <<PLIST
     <string>$NODE_BIN</string>
     <string>$ROOT/node_modules/next/dist/bin/next</string>
     <string>start</string>
+    <string>-H</string>
+    <string>$BIND_HOST</string>
     <string>-p</string>
     <string>$PORT</string>
   </array>
