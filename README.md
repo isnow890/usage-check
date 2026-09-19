@@ -60,8 +60,8 @@ be current shows `stale`. See [Provider notes](#provider-notes).
 - Node.js 22.13 or newer (24.x recommended — OpenCode support needs
   `node:sqlite`, which is not flag-free until 22.13)
 - The tools you want to measure, installed and signed in at least once
-- [Tailscale](https://tailscale.com), only if you want to open the dashboard
-  from another device
+- [Tailscale](https://tailscale.com), only if you install with `--tailscale` to
+  keep the dashboard off the local network
 
 You do not need every provider installed. Missing ones render as unavailable.
 
@@ -89,28 +89,31 @@ npm install
 npm run snapshot        # prints what each collector found
 npm run build
 ./scripts/install-launchd.sh
-tailscale serve --bg 4317   # optional: reach it from your phone
 ```
 
 `npm run snapshot` is the useful step to run first. It shows which providers
 produced numbers before any UI is involved, which makes a missing credential
 obvious.
 
-The generated service listens on `127.0.0.1` only, so nothing on the local
-network can open the dashboard no matter which Wi-Fi the machine joins. The last
-line is how a phone gets in instead: Serve terminates HTTPS on your tailnet and
-proxies to that loopback port. Leave it out if you only ever look at this Mac,
-and drop `--bg` while you are testing so it runs in the foreground. Details and
-the funnel alternative are in [Viewing from a phone](#viewing-from-a-phone).
+The service listens on every interface, so a phone on the same Wi-Fi can open
+`http://<machine-name>:4317` straight away. That also means anyone else on that
+network can. If you would rather close the local network and reach it over
+Tailscale instead:
+
+```bash
+./scripts/install-launchd.sh --tailscale   # loopback + `tailscale serve`
+```
+
+`--help` lists `--bind`, `--port` and `--label`. Details and the funnel
+alternative are in [Viewing from a phone](#viewing-from-a-phone).
 
 ## Running as a service
 
 `scripts/install-launchd.sh` generates a LaunchAgent at
-`~/Library/LaunchAgents/com.usage-check.dashboard.plist` and loads it. The plist is
-generated rather than committed so the Node path matches the machine it runs on.
-Set `USAGE_CHECK_LABEL` or `USAGE_CHECK_PORT` to run more than one instance
-without the two colliding. `USAGE_CHECK_BIND` overrides the `127.0.0.1` default
-— only do that if you have decided the extra reachability is what you want.
+`~/Library/LaunchAgents/com.usage-check.dashboard.plist` and loads it. The plist
+is generated rather than committed so the Node path matches the machine it runs
+on. `--port` and `--label` let you run more than one instance without the two
+colliding.
 
 ```bash
 # restart after a rebuild (the common case)
@@ -144,19 +147,26 @@ only computes when a browser asks, so leaving the page closed makes it dormant.
 
 ## Viewing from a phone
 
-The service binds to `127.0.0.1`, so a plain `http://<machine-name>:4317` does
-**not** work from another device — and neither does anything else on the same
-Wi-Fi. Reaching it from the tailnet is [Tailscale
-Serve](https://tailscale.com/kb/1312/serve)'s job:
+By default the service listens on every interface, so a phone on the same Wi-Fi
+opens `http://<machine-name>:4317` with nothing to install. Anyone else on that
+network can open it too.
+
+If you want it reachable only from devices you control, install with
+`--tailscale`. That binds the service to `127.0.0.1` and publishes it to your
+tailnet through [Tailscale Serve](https://tailscale.com/kb/1312/serve):
 
 ```bash
-tailscale serve --bg 4317
+./scripts/install-launchd.sh --tailscale
+tailscale serve status    # https://<machine>.<tailnet>.ts.net
 ```
 
-Serve terminates HTTPS on your tailnet and proxies to the loopback port, so
-only devices you added to the tailnet can open the dashboard, and it survives
-reboots. `tailscale serve status` shows what is being proxied; `tailscale serve
-reset` turns it off.
+Serve terminates HTTPS on your tailnet and proxies the loopback port, so nothing
+on the local network can reach it and the mapping survives reboots. Turning it
+off later is `tailscale serve reset`, or reinstall without the flag.
+
+Note that Tailscale Serve has to be enabled once per tailnet, from the link it
+prints on first use, which is the part that makes this option more work than the
+default.
 
 Use `tailscale funnel` instead if you need access from outside the tailnet. That
 publishes the port to the public internet, so put an auth layer in front of it —

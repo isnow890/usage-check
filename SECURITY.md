@@ -37,13 +37,13 @@ Stated plainly, because it decides which reports matter:
 
 ## Known and documented, not vulnerabilities
 
-- **Running the server yourself changes who can reach it.** The generated
-  LaunchAgent passes `-H 127.0.0.1`, so the installed service is loopback-only
-  and remote access goes through Tailscale Serve. If you start Next.js another
-  way — plain `next dev`, a hand-written plist, a container — it listens on
-  `*:4317` instead, and any device that can route to the machine gets the
-  dashboard without authenticating. The footer reports which of the two is
-  live.
+- **The default install listens on every interface.** `next start` without
+  `-H` listens on `*:4317`, so any device that can route to the machine —
+  including anything else on the same Wi-Fi — opens the dashboard without
+  authenticating. That is the documented default because it is what makes phone
+  access work with no extra setup, and it is a deliberate trade rather than an
+  oversight. Install with `--tailscale` to bind `127.0.0.1` and publish the
+  dashboard to your tailnet only. The footer reports which of the two is live.
 - **The OAuth client id and secret in `lib/collectors/antigravity.mjs`.** Those
   are Antigravity's own public client credentials, shipped inside the desktop
   app and reproduced by every third-party client that reads its quota. They are
