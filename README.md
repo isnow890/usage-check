@@ -60,6 +60,8 @@ be current shows `stale`. See [Provider notes](#provider-notes).
 - Node.js 22.13 or newer (24.x recommended — OpenCode support needs
   `node:sqlite`, which is not flag-free until 22.13)
 - The tools you want to measure, installed and signed in at least once
+- [Tailscale](https://tailscale.com), only if you want to open the dashboard
+  from another device
 
 You do not need every provider installed. Missing ones render as unavailable.
 
@@ -70,13 +72,15 @@ mostly "find which credentials this machine already has".
 
 From the repository root, paste this into Claude Code or Codex:
 
-> Install and run this project. It is local-only; do not deploy anything. Build
-> it, start it, and confirm each provider card shows a real number rather than
-> `unavailable`. Then install it as a launchd service so it starts at login.
-> If a provider reports no data, read that provider's collector in
-> `lib/collectors/` before changing code.
+> Install and run this project. It is local-only; do not deploy anything, and do
+> not expose it beyond this machine and the Tailscale tailnet. Build it, start
+> it, and confirm each provider card shows a real number rather than
+> `unavailable`. Then install it as a launchd service so it starts at login, and
+> run `tailscale serve --bg 4317` so the tailnet can reach it. If a provider
+> reports no data, read that provider's collector in `lib/collectors/` before
+> changing code.
 
-Then open <http://localhost:4317>.
+Then open <http://localhost:4317>, or the tailnet URL if you set up Serve.
 
 ### Doing it by hand
 
@@ -85,11 +89,19 @@ npm install
 npm run snapshot        # prints what each collector found
 npm run build
 ./scripts/install-launchd.sh
+tailscale serve --bg 4317   # optional: reach it from your phone
 ```
 
 `npm run snapshot` is the useful step to run first. It shows which providers
 produced numbers before any UI is involved, which makes a missing credential
 obvious.
+
+The generated service listens on `127.0.0.1` only, so nothing on the local
+network can open the dashboard no matter which Wi-Fi the machine joins. The last
+line is how a phone gets in instead: Serve terminates HTTPS on your tailnet and
+proxies to that loopback port. Leave it out if you only ever look at this Mac,
+and drop `--bg` while you are testing so it runs in the foreground. Details and
+the funnel alternative are in [Viewing from a phone](#viewing-from-a-phone).
 
 ## Running as a service
 
@@ -97,7 +109,8 @@ obvious.
 `~/Library/LaunchAgents/com.usage-check.dashboard.plist` and loads it. The plist is
 generated rather than committed so the Node path matches the machine it runs on.
 Set `USAGE_CHECK_LABEL` or `USAGE_CHECK_PORT` to run more than one instance
-without the two colliding.
+without the two colliding. `USAGE_CHECK_BIND` overrides the `127.0.0.1` default
+— only do that if you have decided the extra reachability is what you want.
 
 ```bash
 # restart after a rebuild (the common case)
@@ -131,13 +144,22 @@ only computes when a browser asks, so leaving the page closed makes it dormant.
 
 ## Viewing from a phone
 
-Put both devices on the same [Tailscale](https://tailscale.com) network and open
-`http://<machine-name>:4317`. Nothing is published to the public internet, and
-the only devices that can reach it are the ones you added to your tailnet.
+The service binds to `127.0.0.1`, so a plain `http://<machine-name>:4317` does
+**not** work from another device — and neither does anything else on the same
+Wi-Fi. Reaching it from the tailnet is [Tailscale
+Serve](https://tailscale.com/kb/1312/serve)'s job:
 
-If you want access from outside the tailnet, prefer `tailscale funnel` over
-deploying the app. Funnel exposes the local port over HTTPS and keeps every
-credential on the machine you control. Put an auth layer in front of it, because
+```bash
+tailscale serve --bg 4317
+```
+
+Serve terminates HTTPS on your tailnet and proxies to the loopback port, so
+only devices you added to the tailnet can open the dashboard, and it survives
+reboots. `tailscale serve status` shows what is being proxied; `tailscale serve
+reset` turns it off.
+
+Use `tailscale funnel` instead if you need access from outside the tailnet. That
+publishes the port to the public internet, so put an auth layer in front of it —
 a funnel URL is reachable by anyone who has it.
 
 <p align="center">
@@ -219,6 +241,9 @@ rediscovered.
   never copied elsewhere.
 - Conversations, prompts, and file contents are not read. Only usage metadata.
 - Nothing is written outside `~/.usage-check/` and the launchd log files.
+
+If you find code that does not match this section, report it privately rather
+than in a public issue — see [SECURITY.md](SECURITY.md).
 
 The one thing that looks alarming in the source: an OAuth client id and secret
 in `lib/collectors/antigravity.mjs`. Those are Antigravity's own public client
