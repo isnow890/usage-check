@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import * as Separator from "@radix-ui/react-separator";
 import * as ToggleGroup from "@radix-ui/react-toggle-group";
 import * as Tooltip from "@radix-ui/react-tooltip";
-import { ChevronDown, RefreshCw, ShieldAlert } from "lucide-react";
+import { ChevronDown, RefreshCw } from "lucide-react";
 
 import { DragGrip } from "@/components/drag-grip";
 import { ModelTable } from "@/components/model-table";
@@ -230,11 +230,8 @@ export function Dashboard({ initial }: { initial: Snapshot }) {
   const sources = [...new Set(providers.flatMap((p) => p.sources ?? []))];
   const stale = ageSeconds > 120;
 
-  // Reachable over Tailscale is the intended setup, so it stays quiet. A plain
-  // LAN address means anything on that network can read this page unauthenticated.
   const network = snapshot.network ?? null;
   const reachable = network?.reachable ?? [];
-  const openToLan = reachable.filter((entry) => entry.kind === "lan" || entry.kind === "other");
 
   const items: GridItem[] = [
     { id: SUMMARY_ID },
@@ -322,26 +319,6 @@ export function Dashboard({ initial }: { initial: Snapshot }) {
           </button>
         </header>
 
-        {openToLan.length ? (
-          <div className="flex items-start gap-2.5 rounded-lg border border-line bg-surface px-3.5 py-2.5">
-            <ShieldAlert className="mt-px size-3.5 shrink-0 text-warn" />
-            <p className="text-[11px] leading-relaxed text-ink-dim">
-              <span className="text-ink">
-                Any device on this network can open this dashboard without signing in.
-              </span>{" "}
-              It answers on{" "}
-              {openToLan.map((entry, index) => (
-                <span key={entry.address}>
-                  {index ? ", " : ""}
-                  <span className="font-mono text-ink">{entry.address}</span> ({entry.name})
-                </span>
-              ))}
-              . Binding the server to a private address, or keeping this machine on a
-              network you trust, closes that.
-            </p>
-          </div>
-        ) : null}
-
         <SortableGrid
           items={items}
           order={order}
@@ -396,7 +373,7 @@ export function Dashboard({ initial }: { initial: Snapshot }) {
         <footer className="flex flex-wrap items-center gap-x-3 gap-y-1 pb-2 text-[10.5px] text-ink-faint">
           <span>local read {snapshot.tookMs}ms · credentials stay on this machine</span>
           {network ? (
-            <span className={openToLan.length ? "text-warn" : undefined}>
+            <span>
               {reachable.length
                 ? `reachable at ${reachable.map((entry) => entry.address).join(", ")}`
                 : "listening on loopback only"}
