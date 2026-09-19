@@ -78,4 +78,23 @@ export type Snapshot = {
   providers: Provider[];
   errors: { collector: string; message: string }[];
   warnings: string[];
+  network?: NetworkExposure | null;
+};
+
+/**
+ * `kind` is inferred from the address range, not from an interface lookup.
+ * `reachable` is measured by opening a TCP connection to our own port on each
+ * address, so it says what answers, not what a remote peer is allowed to do.
+ */
+export type NetworkAddress = {
+  name: string;
+  address: string;
+  kind: "lan" | "tailnet" | "loopback" | "other";
+};
+
+export type NetworkExposure = {
+  method: "self-probe";
+  port: number;
+  addresses: NetworkAddress[];
+  reachable: NetworkAddress[];
 };
