@@ -215,8 +215,11 @@ into a multi-second page.
 
 These are the things that will look like bugs if you do not know them.
 
-**Codex** reads limits from the last session that recorded them. If you stop
-using Codex, that card stops updating. It reflects your last request, not now.
+**Codex** rollouts are append-only and get resumed, so a session that started
+days ago can still be the file producing today's tokens. Rows are dated by the
+last record in the file rather than the session start, and the limits shown are
+whatever the newest rollout recorded — your last request, not right now. If you
+stop using Codex, that card stops updating.
 
 **Claude** limits are a snapshot Claude Code writes to `~/.claude.json`, not a
 live fetch. With no active subscription that snapshot is empty, and the card
