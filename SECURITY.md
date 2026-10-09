@@ -19,9 +19,9 @@ either a fix or an explanation of why the report is out of scope.
 
 Stated plainly, because it decides which reports matter:
 
-- It reads OAuth refresh tokens and billing credentials that already exist on
-  the machine: `~/.codex`, `~/.claude.json`, `~/.gemini`, the codex-router
-  store, and the OpenCode database.
+- It reads OAuth tokens and billing credentials that already exist on the
+  machine: `~/.codex`, `~/.claude.json`, the Claude Code login keychain entry,
+  `~/.gemini`, the codex-router store, and the OpenCode database.
 - It sends derived access tokens to the provider quota APIs they belong to.
   Nothing is sent to a third party.
 - It writes only under `~/.usage-check/` and the launchd log files.

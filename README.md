@@ -221,9 +221,13 @@ last record in the file rather than the session start, and the limits shown are
 whatever the newest rollout recorded — your last request, not right now. If you
 stop using Codex, that card stops updating.
 
-**Claude** limits are a snapshot Claude Code writes to `~/.claude.json`, not a
-live fetch. With no active subscription that snapshot is empty, and the card
-says so instead of showing zero.
+**Claude** limits are read live from `api.anthropic.com/api/oauth/usage`, the
+endpoint behind Claude Code's `/usage`. The token comes from the login keychain
+entry Claude Code maintains — `~/.claude/.credentials.json` is a leftover from
+older installs and is only a fallback. The refresh token is deliberately left
+alone, because refreshing it can rotate the credential out from under a running
+Claude Code session; if the access token has expired the card says to run Claude
+Code once instead of trading your login for a number on a dashboard.
 
 **Gemini / Antigravity** is the one worth reading about. Google serves the same
 quota schema from two hosts, and the production host answers consumer
