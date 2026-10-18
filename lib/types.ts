@@ -53,6 +53,8 @@ export type Provider = {
   subtitle: string;
   kind: "subscription" | "metered";
   status?: "ok" | "stale" | "unavailable" | "unverified";
+  quotaStatus?: "ok" | "unavailable";
+  quotaMessage?: string;
   message?: string;
   sampledAt?: string;
   lastKnown?: { label: string; usedPercent: number }[];

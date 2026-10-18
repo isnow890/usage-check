@@ -14,6 +14,8 @@ if (process.argv.includes("--json")) {
     const t = p.usage?.today?.tokens ?? 0;
     const w = p.usage?.window?.tokens ?? 0;
     console.log(`\n${p.name.padEnd(13)} ${String(p.kind).padEnd(13)} today=${fmt(t)} window=${fmt(w)}`);
+    if (p.status && p.status !== "ok") console.log(`   status  ${p.status}: ${p.message ?? ""}`);
+    if (p.quotaStatus === "unavailable") console.log(`   limits  unavailable: ${p.quotaMessage ?? ""}`);
     for (const q of p.quota ?? []) {
       console.log(`   quota   ${q.label.padEnd(14)} ${String(q.usedPercent).padStart(6)}%  ${q.detail ?? ""}`);
     }

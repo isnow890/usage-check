@@ -5,6 +5,8 @@
   "type": "module",
   "description": "One dashboard for Codex, Claude, Antigravity, OpenCode and CommandCode usage.",
   "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "prebuild": "npm test",
     "dev": "next dev -p 4317",
     "build": "next build",
     "start": "next start -p 4317",

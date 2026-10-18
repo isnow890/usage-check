@@ -45,9 +45,9 @@ See [Viewing from a phone](#viewing-from-a-phone).
 | --- | --- | --- |
 | Codex | `~/.codex/sessions/**/*.jsonl` | Tokens, sessions, plan limits |
 | Claude | `~/.claude/projects/**/*.jsonl`, `~/.claude.json` | Tokens, requests, plan limits |
-| Gemini / Antigravity | `daily-cloudcode-pa.googleapis.com` | Per-group 5-hour and weekly limits, plan |
+| Gemini / Antigravity | Running Antigravity app, loopback API | Per-group 5-hour and weekly limits, Argon weekly limit, plan |
 | CommandCode | `~/.codex/codex-router/usage-events.jsonl`, local billing API | Tokens, credits, request latency |
-| OpenCode | `~/.local/share/opencode/opencode.db` | Tokens, measured cost per model |
+| OpenCode | Local `opencode.db`, official OpenCode Go usage API | Local tokens and recorded cost; account plan limits |
 
 Provider support is uneven, and the dashboard says so rather than guessing. A
 provider with no readable quota shows `unavailable`; a value that may no longer
@@ -229,23 +229,28 @@ alone, because refreshing it can rotate the credential out from under a running
 Claude Code session; if the access token has expired the card says to run Claude
 Code once instead of trading your login for a number on a dashboard.
 
-**Gemini / Antigravity** is the one worth reading about. Google serves the same
-quota schema from two hosts and neither is a superset, so the collector reads
-both and merges them per bucket, keeping the higher used-percent where they
-disagree. That is not defensive coding for its own sake: on 2026-09-18 the
-canary (`daily-cloudcode-pa`) carried real consumption while production
-returned placeholder buckets, and by 2026-10-18 the roles had swapped — the
-canary answered with only the third-party group at a flat 0% while production
-still had the Gemini group at 16.1%. Reading a single host is what made the
-Gemini rows disappear from the card.
+**Gemini / Antigravity** reads the running desktop app's local
+`RetrieveUserQuotaSummary` API. Keep Antigravity open for current limits. The
+collector discovers its loopback port and reads the same quota pools as Models
+& Usage, including the separate Gemini 4 Argon weekly pool. When the app is
+closed, the last successful reading is shown as `stale`. Direct Google OAuth
+queries were removed after returning different limits for the same account and
+omitting Argon; combining those responses did not make them accurate.
 
 **CommandCode** exposes 5-hour and weekly windows only. The monthly bar the
 official app shows is derived here from the credit pool and is labeled as
 derived in the UI. Its billing endpoint is undocumented.
 
-**OpenCode** stores a real per-message cost, so its spend figure is measured
-rather than estimated. It has no local quota store; the local database is opened
-read-only because the WAL file is live.
+**OpenCode** reads local messages from its database, opened read-only while its
+WAL file is live. These token and recorded-cost totals cover this machine's CLI
+history, not all clients on the account, and recorded model cost is not your
+subscription bill. Go's 5-hour, weekly, and monthly limits are read separately
+from `https://opencode.ai/zen/go/v1/usage`, using the CLI key in
+`~/.local/share/opencode/auth.json`, under `opencode` or the older `opencode-go`
+entry (or `OPENCODE_API_KEY`). XDG data paths are
+respected. An expired key shows `Limits unavailable` with a recovery message;
+it never becomes a fabricated 0% reading. Connect a current Console key using
+`opencode auth login` to restore live limits.
 
 Each collector in `lib/collectors/` carries the reasoning inline, including the
 endpoints that were tried and rejected, so the same dead ends are not
@@ -263,11 +268,8 @@ rediscovered.
 If you find code that does not match this section, report it privately rather
 than in a public issue — see [SECURITY.md](SECURITY.md).
 
-The one thing that looks alarming in the source: an OAuth client id and secret
-in `lib/collectors/antigravity.mjs`. Those are Antigravity's own public client
-credentials, shipped inside the desktop app and reproduced by every third-party
-client that reads its quota. They are not user secrets, and your refresh token
-is never stored in this repository.
+Antigravity is queried over loopback using the running app's local CSRF token.
+That token is never sent to a remote host or stored in the quota cache.
 
 ## License
 

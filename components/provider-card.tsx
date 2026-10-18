@@ -34,6 +34,7 @@ export function ProviderCard({
   const isStale = provider.status === "stale";
   const isUnavailable = provider.status === "unavailable";
   const isUnverified = provider.status === "unverified";
+  const quotaUnavailable = provider.quotaStatus === "unavailable" && !provider.quota.length;
 
   return (
     <article className="overflow-hidden rounded-lg border border-line bg-surface">
@@ -60,6 +61,12 @@ export function ProviderCard({
       </header>
 
       <div className="grid gap-2.5 px-3 py-3">
+        {quotaUnavailable && provider.quotaMessage ? (
+          <div className="grid gap-1">
+            <span className="text-[10px] text-warn">Limits unavailable</span>
+            <p className="text-[11px] text-ink-dim">{provider.quotaMessage}</p>
+          </div>
+        ) : null}
         {isUnverified ? (
           <p className="text-[11px] text-warn">{provider.message}</p>
         ) : null}
@@ -70,6 +77,7 @@ export function ProviderCard({
 
         {isStale && provider.lastKnown?.length ? (
           <div className="grid gap-1.5">
+            {provider.message ? <p className="text-[11px] text-ink-dim">{provider.message}</p> : null}
             <p className="text-[10.5px] text-warn">
               Last known{sampled ? ` · ${sampled}` : ""} — not current
             </p>
