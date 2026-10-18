@@ -255,8 +255,14 @@ export function Dashboard({ initial }: { initial: Snapshot }) {
             </span>
             <div>
               <h1 className="text-[14px] font-medium leading-tight">Usage Check</h1>
+              {/* Five provider names do not fit the header at 390px, where the
+                  subtitle is the only thing that grows, so the narrow layout
+                  counts them instead of truncating the list mid-word. */}
               <p className="text-[11px] text-ink-faint">
-                {providers.map((p) => p.name).join(" · ")}
+                <span className="hidden sm:inline">
+                  {providers.map((p) => p.name).join(" · ")}
+                </span>
+                <span className="sm:hidden">{providers.length} providers</span>
               </p>
             </div>
           </div>
