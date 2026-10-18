@@ -230,13 +230,14 @@ Claude Code session; if the access token has expired the card says to run Claude
 Code once instead of trading your login for a number on a dashboard.
 
 **Gemini / Antigravity** is the one worth reading about. Google serves the same
-quota schema from two hosts, and the production host answers consumer
-subscriptions with placeholder buckets that read as "everything full". The
-canary host carries real consumption. Measured side by side for the same
-account at the same moment, production reported 98.1% weekly remaining where
-the app showed 59%. This collector tries the canary host first and only falls
-back to production. If your Antigravity card ever shows every bucket at 100%,
-that is what happened.
+quota schema from two hosts and neither is a superset, so the collector reads
+both and merges them per bucket, keeping the higher used-percent where they
+disagree. That is not defensive coding for its own sake: on 2026-09-18 the
+canary (`daily-cloudcode-pa`) carried real consumption while production
+returned placeholder buckets, and by 2026-10-18 the roles had swapped — the
+canary answered with only the third-party group at a flat 0% while production
+still had the Gemini group at 16.1%. Reading a single host is what made the
+Gemini rows disappear from the card.
 
 **CommandCode** exposes 5-hour and weekly windows only. The monthly bar the
 official app shows is derived here from the credit pool and is labeled as
